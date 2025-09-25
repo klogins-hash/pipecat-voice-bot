@@ -36,7 +36,7 @@ logger.add(
 )
 
 print("🚀 Starting Production Pipecat Bot...")
-print("⏳ Loading models and imports...")
+print("⏳ Loading models and imports (v2)...")
 
 logger.info("Loading Local Smart Turn Analyzer V3...")
 from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
