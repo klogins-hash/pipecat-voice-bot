@@ -135,7 +135,7 @@ STT_LANGUAGE = "en"
 STT_MODEL = "sonic-english"
 
 # Production Settings
-PORT = int(os.getenv("PORT", "7860"))
+PORT = int(os.getenv("PORT", "8080"))  # Railway default port
 HOST = "0.0.0.0"  # Listen on all interfaces for Railway
 
 # =============================================================================
@@ -286,6 +286,10 @@ if __name__ == "__main__":
     logger.info(f"🔑 Cartesia API key: {'✅ Configured' if os.getenv('CARTESIA_API_KEY') else '❌ Missing'}")
     logger.info(f"🔑 OpenAI API key: {'✅ Configured' if os.getenv('OPENAI_API_KEY') else '❌ Missing'}")
     logger.info(f"🔑 Cohere API key: {'✅ Configured' if os.getenv('COHERE_API_KEY') else '❌ Missing'}")
+    
+    # Set the port for Pipecat to use
+    import sys
+    sys.argv.extend(["--port", str(PORT), "--host", HOST])
     
     from pipecat.runner.run import main
     main()
