@@ -36,16 +36,22 @@ logger.add(
 )
 
 print("🚀 Starting Production Pipecat Bot...")
-print("⏳ Loading models and imports (v2)...")
+print("⏳ Loading models and imports (v3)...")
 
-logger.info("Loading Local Smart Turn Analyzer V3...")
-from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
+logger.info("Loading basic components...")
+try:
+    from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
+    logger.info("✅ Local Smart Turn Analyzer V3 loaded")
+except Exception as e:
+    logger.warning(f"Could not load Smart Turn Analyzer: {e}")
+    LocalSmartTurnAnalyzerV3 = None
 
-logger.info("✅ Local Smart Turn Analyzer V3 loaded")
-logger.info("Loading Silero VAD model...")
-from pipecat.audio.vad.silero import SileroVADAnalyzer
-
-logger.info("✅ Silero VAD model loaded")
+try:
+    from pipecat.audio.vad.silero import SileroVADAnalyzer
+    logger.info("✅ Silero VAD model loaded")
+except Exception as e:
+    logger.warning(f"Could not load Silero VAD: {e}")
+    SileroVADAnalyzer = None
 
 from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.frames.frames import LLMRunFrame
@@ -239,18 +245,34 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
 async def bot(runner_args: RunnerArguments):
     """Main bot entry point for production deployment."""
 
+    # Create VAD and turn analyzer if available
+    vad_analyzer = None
+    turn_analyzer = None
+    
+    if SileroVADAnalyzer:
+        try:
+            vad_analyzer = SileroVADAnalyzer(params=VADParams(stop_secs=VAD_STOP_SECONDS))
+        except Exception as e:
+            logger.warning(f"Could not create VAD analyzer: {e}")
+    
+    if LocalSmartTurnAnalyzerV3:
+        try:
+            turn_analyzer = LocalSmartTurnAnalyzerV3()
+        except Exception as e:
+            logger.warning(f"Could not create turn analyzer: {e}")
+
     transport_params = {
         "daily": lambda: DailyParams(
             audio_in_enabled=True,
             audio_out_enabled=True,
-            vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=VAD_STOP_SECONDS)),
-            turn_analyzer=LocalSmartTurnAnalyzerV3(),
+            vad_analyzer=vad_analyzer,
+            turn_analyzer=turn_analyzer,
         ),
         "webrtc": lambda: TransportParams(
             audio_in_enabled=True,
             audio_out_enabled=True,
-            vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=VAD_STOP_SECONDS)),
-            turn_analyzer=LocalSmartTurnAnalyzerV3(),
+            vad_analyzer=vad_analyzer,
+            turn_analyzer=turn_analyzer,
         ),
     }
 
