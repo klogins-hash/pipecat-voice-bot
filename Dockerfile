@@ -10,9 +10,8 @@ ENV UV_LINK_MODE=copy
 # Copy dependency files first for better Docker layer caching
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-install-project --no-dev
+# Install dependencies (without cache mount for Railway compatibility)
+RUN uv sync --locked --no-install-project --no-dev
 
 # Copy application code and custom services
 COPY bot_production.py ./
